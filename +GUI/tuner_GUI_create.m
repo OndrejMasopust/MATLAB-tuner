@@ -1,0 +1,56 @@
+function [guiElements] = tuner_GUI_create(hFig, sampleProcessTimer, recCreateTimer)
+%TUNER_GUI_CREATE This function creates the GUI for the tuner and returns a
+%cell array containing pointers to the GUI elements
+%
+%   Input parameters:
+%       hFig: is an uifigure instance into which the GUI should be created
+%       sampleProcessTimer: is a pointer to the timer which is processing
+%          the samples
+%       recCreateTimer: is a pointer to the timer which is responsible for
+%           recreating the audiorecorder object
+%   Output parameters:
+%       guiElements: is a struct array containing the GUI elements
+%
+%   See also: uifigure, uigridlayout, uilabel, uigauge
+%
+%   Author: Ondrej Masopust, CTU FEE, 2019-2020
+%   MIT Licence
+
+% delete the current figure content
+delete(hFig.Children)
+
+%stop all timers and close the window
+hFig.CloseRequestFcn =...
+    @(hFig, ~) terminateApp(hFig, sampleProcessTimer, recCreateTimer);
+
+hGrid = uigridlayout(hFig,...
+    'ColumnWidth', {'1x'},...
+    'RowHeight', {'1x', '1x'});
+hLabel = uilabel(hGrid,...
+    'Text', 'A',...
+    'HorizontalAlignment', 'center',...
+    'FontSize', 40);
+gaugeHzCenter = 440;
+greenRadius = 0.2;
+yellowRadius = 1;
+gaugeRadius = 2;
+hGauge = uigauge(hGrid, 'linear',...
+    'Limits', [gaugeHzCenter-gaugeRadius gaugeHzCenter+gaugeRadius],...
+    'ScaleColors', {'red', 'yellow', 'green', 'yellow', 'red'},...
+    'ScaleColorLimits', [gaugeHzCenter-gaugeRadius gaugeHzCenter-yellowRadius;...
+    gaugeHzCenter-yellowRadius gaugeHzCenter-greenRadius;...
+    gaugeHzCenter-greenRadius gaugeHzCenter+greenRadius;...
+    gaugeHzCenter+greenRadius gaugeHzCenter+yellowRadius;...
+    gaugeHzCenter+yellowRadius gaugeHzCenter+gaugeRadius],...
+    'MajorTicks', [gaugeHzCenter-gaugeRadius gaugeHzCenter-yellowRadius...
+    gaugeHzCenter gaugeHzCenter+yellowRadius gaugeHzCenter+gaugeRadius]);
+guiElements = struct('label', {hLabel},...
+    'gauge', {hGauge},...
+    'gaugeParams', {[greenRadius, yellowRadius, gaugeRadius]});
+end
+
+function [] = terminateApp(hFig, sampleProcessTimer, recCreateTimer)
+stop([sampleProcessTimer recCreateTimer]);
+delete([sampleProcessTimer recCreateTimer]);
+delete(hFig);
+end
